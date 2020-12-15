@@ -15,25 +15,24 @@ namespace plt = matplotlibcpp;
 
 class MultiPlotsMatplotlib
 {
-public:
-    MultiPlotsMatplotlib();
+    public:
+        MultiPlotsMatplotlib();
 
-    ~MultiPlotsMatplotlib();
+        ~MultiPlotsMatplotlib();
 
-    int configure(std::string _name, int _rows, int _cols);
+        int configure(int _rows, int _cols);
 
-    bool setPlotData(std::vector<float> _dataX, std::vector<float> _dataY);
+        bool setPlotData(std::vector<float> _dataX, std::vector<float> _dataY);
 
-private:
-    std::string name_;
-    int nPlots_ = 0;
-    int nRows_ = 0;
-    int nCols_ = 0;
+    private:
+        int nPlots_ = 0;
+        int nRows_ = 0;
+        int nCols_ = 0;
 
-    int delData_ = 30;
+        int delData_ = 30;
 
-    std::map<int, std::vector<float>> storedDataX_, storedDataY_; 
-	std::vector<std::string> lineColors_;
+        std::map<int, std::vector<float>> storedDataX_, storedDataY_; 
+        std::vector<std::string> lineColors_;
 
 };
 

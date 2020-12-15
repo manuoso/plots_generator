@@ -22,3 +22,5 @@ add_subdirectory( library )
 
 # Create the targets for the entire app.
 add_subdirectory( examples )
+
+add_subdirectory( tools )

@@ -2,8 +2,10 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <csignal>
 
-#include <MultiPlotsMatplotlib.h>
+#include <MultiPlotsQt.h>
+
 
 bool fin = false;
 
@@ -17,9 +19,9 @@ int main(int argc, char** argv) {
 	signal(SIGINT, finishHandler);
     signal(SIGTERM, finishHandler);
 
-	MultiPlotsMatplotlib plotter;
+	MultiPlotsQt plotter;
 
-	int nplots = plotter.configure(3, 1);
+	int nplots = plotter.configure(3, 2);
 	if(nplots == 0){
 		std::cout << "returned 0 nplots" << std::endl;
 		return 0;

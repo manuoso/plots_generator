@@ -13,10 +13,8 @@ MultiPlotsMatplotlib::~MultiPlotsMatplotlib()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-int MultiPlotsMatplotlib::configure(std::string _name, int _rows, int _cols)
+int MultiPlotsMatplotlib::configure(int _rows, int _cols)
 {
-	name_ = _name;
-
 	nRows_ = _rows;
 	nCols_ = _cols;
 	nPlots_ = _rows * _cols;
@@ -46,8 +44,6 @@ bool MultiPlotsMatplotlib::setPlotData(std::vector<float> _dataX, std::vector<fl
 	}
 
 	plt::clf();
-
-	plt::suptitle(name_.c_str());
 
 	int contColor = 0;
 	for(int i = 0; i < nPlots_; i++){
