@@ -10,6 +10,9 @@
 #include <chrono>
 #include <thread>
 
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
+
 
 class MultiPlotsQt
 {
@@ -27,7 +30,7 @@ private:
     int nRows_ = 0;
     int nCols_ = 0;
     
-    std::thread *qThread_;
+    boost::asio::ip::udp::socket *serverSocket_;
 
 };
 

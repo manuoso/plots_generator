@@ -3,8 +3,8 @@
 #include <thread>
 #include <chrono>
 #include <csignal>
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <QApplication>
 #include <PlotsQt.h>
@@ -13,7 +13,7 @@
 int main(int argc, char** argv) {
 	QApplication a(argc, argv);
 
-    PlotsQt gui(0);
+    PlotsQt gui;
 	int rows = atoi(argv[1]);
 	int cols = atoi(argv[2]);
 

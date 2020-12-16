@@ -8,6 +8,7 @@
 #include <map>
 #include <math.h>
 #include <chrono>
+#include <thread>
 
 #include <QMainWindow>
 #include <QTime>
@@ -18,18 +19,21 @@
 
 #include <qcustomplot.h>
 
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
 
 class PlotsQt : public QMainWindow
 {
     Q_OBJECT
     public:
-        explicit PlotsQt(QWidget *parent = 0);
+        PlotsQt(QWidget *parent = 0);
 
         ~PlotsQt();
 
         bool configure(int _rows, int _cols);
 
-        bool getData();
+        private: 
+            bool getData();
 
         private slots:
             void realTimePlot();
@@ -40,6 +44,11 @@ class PlotsQt : public QMainWindow
 
         std::vector<QCustomPlot*> plots_;
         QTimer *dataTimer_;
+
+        std::thread *dataThread_;
+
+        boost::asio::ip::udp::socket *serverSocket_;
+        std::mutex dataMutex_;
         
         int nPlots_ = 0;
         std::vector<float> data_;

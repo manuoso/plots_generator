@@ -10,15 +10,13 @@ PlotsQt::PlotsQt(QWidget *parent) :
 
 		setCentralWidget(centralWidget_);
 		this->setWindowTitle("Plots gui");
-
-		// plots_[0] = new QCustomPlot();
-		// mainLayout_->addWidget(plots_[0], 0, 0, 1, 1);
 	}
 
 //---------------------------------------------------------------------------------------------------------------------
 PlotsQt::~PlotsQt()
 {
 	stopAll_ = true;
+	dataThread_->join();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -45,6 +43,8 @@ bool PlotsQt::configure(int _rows, int _cols)
 			cont++;
 		}
 	}
+	
+	dataThread_ = new std::thread(&PlotsQt::getData, this);
 
 	dataTimer_ = new QTimer(this);
 	connect(dataTimer_, SIGNAL(timeout()), this, SLOT(realTimePlot()));
@@ -54,9 +54,47 @@ bool PlotsQt::configure(int _rows, int _cols)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-bool PlotsQt::getData()
-{
+bool PlotsQt::getData(){
+	try {
+		boost::asio::io_service io_service;
+		serverSocket_ = new boost::asio::ip::udp::socket(io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 8080));
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+	
+	while(!stopAll_) {
+		try {
+			float recFloat[nPlots_];
+			boost::array<char, sizeof(data_)> recv_buf;
 
+			boost::asio::ip::udp::endpoint *remote_endpoint = new boost::asio::ip::udp::endpoint();
+			serverSocket_->receive_from(boost::asio::buffer(recv_buf), *remote_endpoint);
+
+			memcpy(&recFloat, &recv_buf[0], sizeof(data_));
+
+			dataMutex_.lock();
+			for(int i = 0; i < nPlots_; i++){
+				data_[i] = recFloat[i];
+			}
+			dataMutex_.unlock();
+
+			// std::cout << "data: ";
+			// for(int i = 0; i < nPlots_; i++){
+			// 	std::cout << recFloat[i] << " , ";
+			// }
+			// std::cout << std::endl;
+			// std::cout << "----------" << std::endl;
+
+		}catch (std::exception &e) {
+			std::cerr << e.what() << std::endl;
+		}
+
+		// std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -69,7 +107,9 @@ void PlotsQt::realTimePlot()
 
     if (key-lastPointKey > 0.005) { // at most add point every 2 ms
 		for(int i = 0; i < nPlots_; i++){
+			dataMutex_.lock();
 			plots_[i]->graph(0)->addData(key, data_[i]);
+			dataMutex_.unlock();
 		}
 
         lastPointKey = key;
