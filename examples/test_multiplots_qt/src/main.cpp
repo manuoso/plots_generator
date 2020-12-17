@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
 	MultiPlotsQt plotter;
 
-	int nplots = plotter.configure(3, 2);
+	int nplots = plotter.configure(3, 2, 2);
 	if(nplots == 0){
 		std::cout << "returned 0 nplots" << std::endl;
 		return 0;
@@ -29,13 +29,12 @@ int main(int argc, char** argv) {
 
 	int cont = 0;
 	while(!fin){
-		std::vector<float> dataX, dataY;
+		std::vector<float> data;
 		for(int i = 0; i < nplots; i++){
-			dataX.push_back(cont + i + 1);
-			dataY.push_back(cont + i + 2);
+			data.push_back(cont + i);
 		}
 
-		plotter.setPlotData(dataX, dataY);
+		plotter.setPlotData(data);
 		cont++;
 
 		// std::this_thread::sleep_for(std::chrono::milliseconds(10));

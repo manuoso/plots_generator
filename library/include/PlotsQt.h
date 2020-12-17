@@ -30,7 +30,7 @@ class PlotsQt : public QMainWindow
 
         ~PlotsQt();
 
-        bool configure(int _rows, int _cols);
+        bool configure(int _rows, int _cols, int _nLines);
 
         private: 
             bool getData();
@@ -42,6 +42,9 @@ class PlotsQt : public QMainWindow
         QWidget *centralWidget_;
         QGridLayout *mainLayout_;
 
+        std::vector<QColor> lineColors_;
+        std::vector<Qt::PenStyle> lineStyle_;
+
         std::vector<QCustomPlot*> plots_;
         QTimer *dataTimer_;
 
@@ -51,6 +54,7 @@ class PlotsQt : public QMainWindow
         std::mutex dataMutex_;
         
         int nPlots_ = 0;
+        int nLines_ = 0;
         std::vector<float> data_;
 
         bool stopAll_ = false;

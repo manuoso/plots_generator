@@ -12,8 +12,6 @@ if( NOT CMAKE_BUILD_TYPE )
 endif()
 
 # Find dependencies
-find_package(Python2 COMPONENTS Development NumPy)
-
 ## Load Qt5
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5PrintSupport REQUIRED)
@@ -41,12 +39,9 @@ target_include_directories( ${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/
 
 target_include_directories( ${PROJECT_NAME}  PUBLIC ${Python2_INCLUDE_DIRS} ${Python2_NumPy_INCLUDE_DIRS})
 
-target_include_directories( ${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../external/matplotlib" ) 
 target_include_directories( ${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../external/qt" ) 
 
 # Link libraries
-target_link_libraries( ${PROJECT_NAME} LINK_PUBLIC Python2::Python Python2::NumPy)
-
 target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${QT5_LIBRARIES})
 
 if(UNIX)

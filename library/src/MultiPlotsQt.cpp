@@ -13,11 +13,12 @@ MultiPlotsQt::~MultiPlotsQt()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-int MultiPlotsQt::configure(int _rows, int _cols)
+int MultiPlotsQt::configure(int _rows, int _cols, int _nLines)
 {
 	nRows_ = _rows;
 	nCols_ = _cols;
-	nPlots_ = _rows * _cols;
+	nLines_ = _nLines;
+	nPlots_ = _rows * _cols * _nLines;
 
 	try {
         boost::asio::io_service io_service;
@@ -35,21 +36,21 @@ int MultiPlotsQt::configure(int _rows, int _cols)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-bool MultiPlotsQt::setPlotData(std::vector<float> _dataX, std::vector<float> _dataY)
+bool MultiPlotsQt::setPlotData(std::vector<float> _data)
 {	
-	if(_dataX.size() > nPlots_ || _dataY.size() > nPlots_){
+	if(_data.size() != nPlots_){
 		return false;
 	}
 
 	try {
-		float sendFloat[_dataY.size()];
+		float sendFloat[_data.size()];
 		
 		for(int i = 0; i < nPlots_; i++){
-			sendFloat[i] = _dataY[i];
+			sendFloat[i] = _data[i];
 		}
 
-		boost::array<char, sizeof(_dataY)> send_buffer;
-		memcpy(&send_buffer[0], &sendFloat, sizeof(_dataY));
+		boost::array<char, sizeof(_data)> send_buffer;
+		memcpy(&send_buffer[0], &sendFloat, sizeof(_data));
 
 		// std::cout << "data: ";
 		// for(int i = 0; i < nPlots_; i++){

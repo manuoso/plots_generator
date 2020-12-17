@@ -20,27 +20,55 @@ PlotsQt::~PlotsQt()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-bool PlotsQt::configure(int _rows, int _cols)
+bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 {	
-	nPlots_ = _rows * _cols;
+	if(nLines_ > 5){
+		std::cout << "Too much Lines in same graph" << std::endl;
+		return false;
+	}
+
+	nLines_ = _nLines;
+	nPlots_ = _rows * _cols * _nLines;
 	for(int i = 0; i < nPlots_; i++){
 		data_.push_back(0);
 	}
 	
 	QPen pen; 
 	pen.setWidthF(3);
-	pen.setStyle(Qt::SolidLine);
-	pen.setColor(QColor(0, 0, 255));
+	
+	lineColors_.push_back(QColor(255, 0, 0));
+	lineColors_.push_back(QColor(0, 255, 0));
+	lineColors_.push_back(QColor(0, 0, 255));
+	lineColors_.push_back(QColor(128, 0, 128));
+	lineColors_.push_back(QColor(0, 255, 255));
+	lineColors_.push_back(QColor(255, 255, 0));
+	lineColors_.push_back(QColor(34, 34, 34));
 
-	int cont = 0;
+	lineStyle_.push_back(Qt::SolidLine);
+	lineStyle_.push_back(Qt::DotLine);
+	lineStyle_.push_back(Qt::DashLine);
+	lineStyle_.push_back(Qt::DashDotLine);
+	lineStyle_.push_back(Qt::DashDotDotLine);
+
+	int cont = 0, contColor = 0;
 	for(int j = 0; j < _rows; j++){
 		for(int k = 0; k < _cols; k++){
+			if(contColor > lineColors_.size()){
+				contColor = 0;
+			}
+
+			pen.setColor(lineColors_[contColor]);
 			plots_.push_back(new QCustomPlot());
-			plots_[cont]->addGraph(); 
-        	plots_[cont]->graph(0)->setPen(pen);
+
+			for(int l = 0; l < _nLines; l++){
+				pen.setStyle(lineStyle_[l]);
+				plots_[cont]->addGraph(); 
+        		plots_[cont]->graph(l)->setPen(pen);
+			}
 
 			mainLayout_->addWidget(plots_[cont], j, k, 1, 1);
 			cont++;
+			contColor++;
 		}
 	}
 	
@@ -87,7 +115,8 @@ bool PlotsQt::getData(){
 			// std::cout << std::endl;
 			// std::cout << "----------" << std::endl;
 
-		}catch (std::exception &e) {
+		}
+		catch (std::exception &e) {
 			std::cerr << e.what() << std::endl;
 		}
 
@@ -106,16 +135,21 @@ void PlotsQt::realTimePlot()
     static double lastPointKey = 0;
 
     if (key-lastPointKey > 0.005) { // at most add point every 2 ms
-		for(int i = 0; i < nPlots_; i++){
-			dataMutex_.lock();
-			plots_[i]->graph(0)->addData(key, data_[i]);
-			dataMutex_.unlock();
+		int cont = 0;
+		for(int i = 0; i < nPlots_; i = i+nLines_){
+			for(int j = 0; j < nLines_; j++){
+				dataMutex_.lock();
+				plots_[cont]->graph(j)->addData(key, data_[i+j]);
+				dataMutex_.unlock();
+			}
+			cont++;
 		}
 
         lastPointKey = key;
     }
 	
-	for(int i = 0; i < nPlots_; i++){
+	int nplots = nPlots_/nLines_;
+	for(int i = 0; i < nplots; i++){
 		plots_[i]->graph(0)->rescaleAxes();
 
     	// make key axis range scroll with the data (at a constant range size of 8):
