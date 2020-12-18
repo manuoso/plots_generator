@@ -50,7 +50,8 @@ class PlotsQt : public QMainWindow
 
         std::thread *dataThread_;
 
-        boost::asio::ip::udp::socket *serverSocket_;
+        boost::asio::ip::tcp::socket *serverSocket_;
+        boost::asio::ip::tcp::acceptor *acc_;
         std::mutex dataMutex_;
         
         int nPlots_ = 0;

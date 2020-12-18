@@ -29,6 +29,7 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 
 	nLines_ = _nLines;
 	nPlots_ = _rows * _cols * _nLines;
+	
 	for(int i = 0; i < nPlots_; i++){
 		data_.push_back(0);
 	}
@@ -85,7 +86,11 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 bool PlotsQt::getData(){
 	try {
 		boost::asio::io_service io_service;
-		serverSocket_ = new boost::asio::ip::udp::socket(io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 8080));
+		acc_ = new boost::asio::ip::tcp::acceptor(io_service, boost::asio::ip::tcp::endpoint{ boost::asio::ip::address::from_string("127.0.0.1"), 8080 });
+
+		boost::system::error_code ec;
+		serverSocket_ = new boost::asio::ip::tcp::socket(io_service);
+		acc_->accept(*serverSocket_, ec);
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
@@ -94,23 +99,22 @@ bool PlotsQt::getData(){
 	
 	while(!stopAll_) {
 		try {
-			float recFloat[nPlots_];
-			boost::array<char, sizeof(data_)> recv_buf;
-
-			boost::asio::ip::udp::endpoint *remote_endpoint = new boost::asio::ip::udp::endpoint();
-			serverSocket_->receive_from(boost::asio::buffer(recv_buf), *remote_endpoint);
-
-			memcpy(&recFloat, &recv_buf[0], sizeof(data_));
+			std::vector<float> recSocket;
+			recSocket.resize(nPlots_);
+			boost::system::error_code recEc;
+			std::size_t length = boost::asio::read(*serverSocket_, boost::asio::buffer(recSocket), recEc);
 
 			dataMutex_.lock();
 			for(int i = 0; i < nPlots_; i++){
-				data_[i] = recFloat[i];
+				data_[i] = recSocket[i];
 			}
 			dataMutex_.unlock();
 
+			// std::cout << "length rec: " << length << std::endl;
+
 			// std::cout << "data: ";
 			// for(int i = 0; i < nPlots_; i++){
-			// 	std::cout << recFloat[i] << " , ";
+			// 	std::cout << recSocket[i] << " , ";
 			// }
 			// std::cout << std::endl;
 			// std::cout << "----------" << std::endl;

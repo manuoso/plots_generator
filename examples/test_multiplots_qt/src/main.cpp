@@ -19,13 +19,8 @@ int main(int argc, char** argv) {
 	signal(SIGINT, finishHandler);
     signal(SIGTERM, finishHandler);
 
-	MultiPlotsQt plotter;
-
-	int nplots = plotter.configure(3, 2, 2);
-	if(nplots == 0){
-		std::cout << "returned 0 nplots" << std::endl;
-		return 0;
-	}
+	int nplots = 3*2*2;
+	MultiPlotsQt<3,2,2> plotter;
 
 	int cont = 0;
 	while(!fin){

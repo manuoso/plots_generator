@@ -14,25 +14,19 @@
 #include <boost/array.hpp>
 
 
+template<std::size_t R_, std::size_t C_, std::size_t N_>
 class MultiPlotsQt
 {
 public:
     MultiPlotsQt();
 
-    ~MultiPlotsQt();
-
-    int configure(int _rows, int _cols, int _nLines);
-
     bool setPlotData(std::vector<float> _data);
 
 private:
-    int nPlots_ = 0;
-    int nRows_ = 0;
-    int nCols_ = 0;
-    int nLines_ = 0;
-    
-    boost::asio::ip::udp::socket *serverSocket_;
+    boost::asio::ip::tcp::socket *serverSocket_;
 
 };
+
+#include <MultiPlotsQt.inl>
 
 #endif // MULTIPLOTSQT_H
