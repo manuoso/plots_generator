@@ -30,14 +30,19 @@ class PlotsQt : public QMainWindow
 
         ~PlotsQt();
 
-        bool configure(int _rows, int _cols, int _nLines);
+        bool configure(bool _enableTs, int _rows, int _cols, int _nLines);
 
-        private: 
-            bool getData();
+    signals:
+        void updateplotXY();
 
-        private slots:
-            void realTimePlot();
-        
+    private: 
+        bool getData();
+
+        void plotDataXY();
+
+    private slots:
+        void realTimePlot();
+
     private:
         QWidget *centralWidget_;
         QGridLayout *mainLayout_;
@@ -50,13 +55,14 @@ class PlotsQt : public QMainWindow
 
         std::thread *dataThread_;
 
-        boost::asio::ip::tcp::socket *serverSocket_;
+        boost::asio::ip::tcp::socket *socket_;
         boost::asio::ip::tcp::acceptor *acc_;
         std::mutex dataMutex_;
         
+        bool enableTs_ = 0;
         int nPlots_ = 0;
         int nLines_ = 0;
-        std::vector<float> data_;
+        std::vector<float> dataX_, dataY_;
 
         bool stopAll_ = false;
 

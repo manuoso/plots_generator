@@ -20,19 +20,9 @@ PlotsQt::~PlotsQt()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-bool PlotsQt::configure(int _rows, int _cols, int _nLines)
+bool PlotsQt::configure(bool _enableTs, int _rows, int _cols, int _nLines)
 {	
-	if(nLines_ > 5){
-		std::cout << "Too much Lines in same graph" << std::endl;
-		return false;
-	}
-
-	nLines_ = _nLines;
-	nPlots_ = _rows * _cols * _nLines;
-	
-	for(int i = 0; i < nPlots_; i++){
-		data_.push_back(0);
-	}
+	enableTs_ = _enableTs;
 	
 	QPen pen; 
 	pen.setWidthF(3);
@@ -51,6 +41,22 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 	lineStyle_.push_back(Qt::DashDotLine);
 	lineStyle_.push_back(Qt::DashDotDotLine);
 
+	if(nLines_ > 5){
+		std::cout << "Too much Lines in same graph" << std::endl;
+		return false;
+	}
+
+	nLines_ = _nLines;
+	nPlots_ = _rows * _cols * _nLines;
+	
+	for(int i = 0; i < nPlots_; i++){
+		dataY_.push_back(0);
+	}
+
+	for(int i = 0; i < nPlots_; i++){
+		dataX_.push_back(0);
+	}
+	
 	int cont = 0, contColor = 0;
 	for(int j = 0; j < _rows; j++){
 		for(int k = 0; k < _cols; k++){
@@ -64,7 +70,7 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 			for(int l = 0; l < _nLines; l++){
 				pen.setStyle(lineStyle_[l]);
 				plots_[cont]->addGraph(); 
-        		plots_[cont]->graph(l)->setPen(pen);
+				plots_[cont]->graph(l)->setPen(pen);
 			}
 
 			mainLayout_->addWidget(plots_[cont], j, k, 1, 1);
@@ -75,9 +81,13 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 	
 	dataThread_ = new std::thread(&PlotsQt::getData, this);
 
-	dataTimer_ = new QTimer(this);
-	connect(dataTimer_, SIGNAL(timeout()), this, SLOT(realTimePlot()));
-	dataTimer_->start(0);
+	if(_enableTs){
+		dataTimer_ = new QTimer(this);
+		connect(dataTimer_, SIGNAL(timeout()), this, SLOT(realTimePlot()));
+		dataTimer_->start(0);
+	}else{
+		connect(this, &PlotsQt::updateplotXY , this, &PlotsQt::plotDataXY);
+	}
 
 	return true;
 }
@@ -89,8 +99,8 @@ bool PlotsQt::getData(){
 		acc_ = new boost::asio::ip::tcp::acceptor(io_service, boost::asio::ip::tcp::endpoint{ boost::asio::ip::address::from_string("127.0.0.1"), 8080 });
 
 		boost::system::error_code ec;
-		serverSocket_ = new boost::asio::ip::tcp::socket(io_service);
-		acc_->accept(*serverSocket_, ec);
+		socket_ = new boost::asio::ip::tcp::socket(io_service);
+		acc_->accept(*socket_, ec);
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
@@ -98,27 +108,57 @@ bool PlotsQt::getData(){
 	}
 	
 	while(!stopAll_) {
-		try {
-			std::vector<float> recSocket;
-			recSocket.resize(nPlots_);
+		try {			
 			boost::system::error_code recEc;
-			std::size_t length = boost::asio::read(*serverSocket_, boost::asio::buffer(recSocket), recEc);
+			std::vector<float> inity;
+			inity.resize(1);
+			std::size_t lengthIY = boost::asio::read(*socket_, boost::asio::buffer(inity), recEc);
 
-			dataMutex_.lock();
-			for(int i = 0; i < nPlots_; i++){
-				data_[i] = recSocket[i];
+			if(inity[0] == 1){
+				std::vector<float> recSocket1;
+				recSocket1.resize(nPlots_);
+				std::size_t length1 = boost::asio::read(*socket_, boost::asio::buffer(recSocket1), recEc);
+
+				dataMutex_.lock();
+				for(int i = 0; i < recSocket1.size(); i++){
+					dataY_[i] = recSocket1[i];
+				}
+				dataMutex_.unlock();
+
+				// std::cout << "data Y: ";
+				// for(int i = 0; i < nPlots_; i++){
+				// 	std::cout << recSocket1[i] << " , ";
+				// }
+				// std::cout << std::endl;
 			}
-			dataMutex_.unlock();
 
-			// std::cout << "length rec: " << length << std::endl;
+			if(!enableTs_){	
+				std::vector<float> initx;
+				initx.resize(1);
+				std::size_t lengthIX = boost::asio::read(*socket_, boost::asio::buffer(initx), recEc);
 
-			// std::cout << "data: ";
-			// for(int i = 0; i < nPlots_; i++){
-			// 	std::cout << recSocket[i] << " , ";
-			// }
-			// std::cout << std::endl;
-			// std::cout << "----------" << std::endl;
+				if(initx[0] == 2){
+					std::vector<float> recSocket2;
+					recSocket2.resize(nPlots_);
+					std::size_t length2 = boost::asio::read(*socket_, boost::asio::buffer(recSocket2), recEc);
 
+					dataMutex_.lock();
+					for(int i = 0; i < recSocket2.size(); i++){
+						dataX_[i] = recSocket2[i];
+					}
+					dataMutex_.unlock();
+
+					// std::cout << "data X: ";
+					// for(int i = 0; i < nPlots_; i++){
+					// 	std::cout << recSocket2[i] << " , ";
+					// }
+					// std::cout << std::endl;
+					// std::cout << "----------" << std::endl;
+
+					emit updateplotXY(); 
+
+				}
+			}
 		}
 		catch (std::exception &e) {
 			std::cerr << e.what() << std::endl;
@@ -128,6 +168,29 @@ bool PlotsQt::getData(){
 	}
 
 	return true;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+void PlotsQt::plotDataXY(){
+
+	int cont = 0;
+	for(int i = 0; i < nPlots_; i = i+nLines_){
+		for(int j = 0; j < nLines_; j++){
+			// plots_[0]->clearGraphs(); 
+
+			dataMutex_.lock();
+			plots_[cont]->graph(j)->addData(dataX_[i+j], dataY_[i+j]);
+			dataMutex_.unlock();
+		}
+		cont++;
+	}
+
+	int nplots = nPlots_/nLines_;
+	for(int i = 0; i < nplots; i++){
+		plots_[i]->graph(0)->rescaleAxes();
+
+    	plots_[i]->replot();
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -143,7 +206,7 @@ void PlotsQt::realTimePlot()
 		for(int i = 0; i < nPlots_; i = i+nLines_){
 			for(int j = 0; j < nLines_; j++){
 				dataMutex_.lock();
-				plots_[cont]->graph(j)->addData(key, data_[i+j]);
+				plots_[cont]->graph(j)->addData(key, dataY_[i+j]);
 				dataMutex_.unlock();
 			}
 			cont++;

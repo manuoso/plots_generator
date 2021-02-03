@@ -20,16 +20,19 @@ int main(int argc, char** argv) {
     signal(SIGTERM, finishHandler);
 
 	int nplots = 3*2*2;
-	MultiPlotsQt<3,2,2> plotter;
+	MultiPlotsQt plotter(false);
 
 	int cont = 0;
 	while(!fin){
-		std::vector<float> data;
+		std::vector<float> dataX, dataY;
+
 		for(int i = 0; i < nplots; i++){
-			data.push_back(cont + i);
+			dataX.push_back(cont + i);
+			dataY.push_back((cont + i ) * 2);
 		}
 
-		plotter.setPlotData(data);
+		// plotter.setPlotDataY(dataY);
+		plotter.setPlotDataXY(dataX, dataY);
 		cont++;
 
 		// std::this_thread::sleep_for(std::chrono::milliseconds(10));

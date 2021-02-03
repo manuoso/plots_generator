@@ -12,14 +12,16 @@
 
 void showHelp(){
 	std::cout << "--help\n";
-	std::cout << "Required arguments: Number Rows(int) Number Cols(int) Number lines(int) \n";
+	std::cout << "Required arguments: Enable TimeStamp X(int) Number Rows(int) Number Cols(int) Number lines(int) \n";
 }
 
 int main(int argc, char** argv) {
 
 	int rows = 0, cols = 0, nlines = 0;
-	
-	if (argc == 4){
+	int ts = 0;
+	bool enableTs = false;
+
+	if (argc == 5){
 		// parse input arguments
 		std::vector<std::string> inputArgs;
         for(int i = 1; i < argc;i++){
@@ -28,9 +30,10 @@ int main(int argc, char** argv) {
 		if(inputArgs[0] == "--help")
 			showHelp();
 		else{
-			rows = stoi(inputArgs[0]);
-			cols = stoi(inputArgs[1]);
-			nlines = stoi(inputArgs[2]);
+			ts = stoi(inputArgs[0]);
+			rows = stoi(inputArgs[1]);
+			cols = stoi(inputArgs[2]);
+			nlines = stoi(inputArgs[3]);
 		}
 	}
 	else{
@@ -39,9 +42,15 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+	if(ts == 1){
+		enableTs = true;
+	}else{
+		enableTs = false;
+	}
+
 	QApplication a(argc, argv);
     PlotsQt gui;
-	int nplots = gui.configure(rows, cols, nlines);
+	int nplots = gui.configure(enableTs, rows, cols, nlines);
 	if(nplots == 0){
 		std::cout << "returned 0 nplots" << std::endl;
 		return 0;
