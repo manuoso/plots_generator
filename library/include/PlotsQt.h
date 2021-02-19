@@ -9,6 +9,7 @@
 #include <math.h>
 #include <chrono>
 #include <thread>
+#include <list>
 
 #include <QMainWindow>
 #include <QTime>
@@ -57,6 +58,7 @@ class PlotsQt : public QMainWindow
         int nPlots_ = 0;
         int nLines_ = 0;
         std::vector<float> data_;
+        std::map<int,std::map<int, std::list<float>>> lastData_;
 
         bool stopAll_ = false;
 

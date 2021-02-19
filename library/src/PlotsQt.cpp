@@ -144,6 +144,9 @@ void PlotsQt::realTimePlot()
 			for(int j = 0; j < nLines_; j++){
 				dataMutex_.lock();
 				plots_[cont]->graph(j)->addData(key, data_[i+j]);
+				lastData_[i][j].push_back(data_[i+j]);
+				if(lastData_[i][j].size() > 400)
+					lastData_[i][j].pop_front();
 				dataMutex_.unlock();
 			}
 			cont++;
@@ -155,6 +158,20 @@ void PlotsQt::realTimePlot()
 	int nplots = nPlots_/nLines_;
 	for(int i = 0; i < nplots; i++){
 		plots_[i]->graph(0)->rescaleAxes();
+		float max = std::numeric_limits<float>::min();
+		float min = std::numeric_limits<float>::max();
+		for(auto &line: lastData_[i]){
+			min = *std::min_element(line.second.begin(),line.second.end());
+			max = *std::max_element(line.second.begin(),line.second.end());
+		}
+		if(max > 0)
+			plots_[i]->yAxis->setRangeUpper(1.2 * max);
+		else
+			plots_[i]->yAxis->setRangeUpper(0.8 * max);
+		if(min > 0)
+			plots_[i]->yAxis->setRangeLower(0.8 * min);
+		else
+			plots_[i]->yAxis->setRangeLower(1.2 * min);
 
     	// make key axis range scroll with the data (at a constant range size of 8):
     	plots_[i]->xAxis->setRange(key, 8, Qt::AlignRight);

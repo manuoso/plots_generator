@@ -1,0 +1,6 @@
+get_filename_component(multiplots_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+if(NOT TARGET multiplots::multiplots)
+    include("${multiplots_CMAKE_DIR}/multiplots-targets.cmake")
+endif()
