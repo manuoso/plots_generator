@@ -1,17 +1,14 @@
 
-#include <iostream>
-#include <boost/asio.hpp>
-#include <boost/array.hpp>
+#include <MultiPlotsQt.h>
 
 //---------------------------------------------------------------------------------------------------------------------
-template<std::size_t R_, std::size_t C_, std::size_t N_>
-MultiPlotsQt<R_, C_, N_>::MultiPlotsQt()
+MultiPlotsQt::MultiPlotsQt(std::string _ip, short unsigned int _port)
 {
 	try {
 		boost::system::error_code ec;
         boost::asio::io_service io_service;
 		serverSocket_ = new boost::asio::ip::tcp::socket(io_service);
-		serverSocket_->connect({ boost::asio::ip::address::from_string("127.0.0.1"), 8080}, ec);
+		serverSocket_->connect({ boost::asio::ip::address::from_string(_ip), _port}, ec);
 	}
 	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
@@ -19,13 +16,19 @@ MultiPlotsQt<R_, C_, N_>::MultiPlotsQt()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-template<std::size_t R_, std::size_t C_, std::size_t N_>
-bool MultiPlotsQt<R_, C_, N_>::setPlotData(std::vector<float> _data)
-{	
-	if(_data.size() != R_*C_*N_){
-		return false;
+MultiPlotsQt::~MultiPlotsQt()
+{
+	try {
+		serverSocket_->close();
 	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+	}
+}
 
+//---------------------------------------------------------------------------------------------------------------------
+bool MultiPlotsQt::setPlotData(std::vector<float> _data)
+{	
 	try {
 		boost::system::error_code ec;
 		std::size_t length = boost::asio::write(*serverSocket_, boost::asio::buffer(_data), ec);

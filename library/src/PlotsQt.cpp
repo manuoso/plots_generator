@@ -1,14 +1,11 @@
 #include <PlotsQt.h>
 
 //---------------------------------------------------------------------------------------------------------------------
-PlotsQt::PlotsQt(QWidget *parent) :
-    QMainWindow(parent)
+PlotsQt::PlotsQt(QWidget *parent)
     {
-		centralWidget_ = new QWidget();
 		mainLayout_ = new QGridLayout();
-		centralWidget_->setLayout(mainLayout_);
+		this->setLayout(mainLayout_);
 
-		setCentralWidget(centralWidget_);
 		this->setWindowTitle("Plots gui");
 	}
 
@@ -20,20 +17,33 @@ PlotsQt::~PlotsQt()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-bool PlotsQt::configure(int _rows, int _cols, int _nLines)
+void PlotsQt::closeEvent(QCloseEvent *event) {
+	stopAll_ = false;
+	try {
+		serverSocket_->close();
+	}
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+int PlotsQt::configure(int _rows, int _cols, int _nLines, std::string _ip, int _port)
 {	
 	if(nLines_ > 5){
 		std::cout << "Too much Lines in same graph" << std::endl;
-		return false;
+		return 0;
 	}
 
+	ip_ = _ip;
+	port_ = _port;
 	nLines_ = _nLines;
 	nPlots_ = _rows * _cols * _nLines;
 	
 	for(int i = 0; i < nPlots_; i++){
 		data_.push_back(0);
 	}
-	
+
 	QPen pen; 
 	pen.setWidthF(3);
 	
@@ -79,14 +89,14 @@ bool PlotsQt::configure(int _rows, int _cols, int _nLines)
 	connect(dataTimer_, SIGNAL(timeout()), this, SLOT(realTimePlot()));
 	dataTimer_->start(0);
 
-	return true;
+	return nPlots_;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 bool PlotsQt::getData(){
 	try {
 		boost::asio::io_service io_service;
-		acc_ = new boost::asio::ip::tcp::acceptor(io_service, boost::asio::ip::tcp::endpoint{ boost::asio::ip::address::from_string("127.0.0.1"), 8080 });
+		acc_ = new boost::asio::ip::tcp::acceptor(io_service, boost::asio::ip::tcp::endpoint{ boost::asio::ip::address::from_string(ip_), port_});
 
 		boost::system::error_code ec;
 		serverSocket_ = new boost::asio::ip::tcp::socket(io_service);
@@ -137,6 +147,9 @@ void PlotsQt::realTimePlot()
 
     double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
     static double lastPointKey = 0;
+	
+	float maxValue = std::numeric_limits<float>::min();
+	float minValue = std::numeric_limits<float>::max();
 
     if (key-lastPointKey > 0.005) { // at most add point every 2 ms
 		int cont = 0;
@@ -144,9 +157,6 @@ void PlotsQt::realTimePlot()
 			for(int j = 0; j < nLines_; j++){
 				dataMutex_.lock();
 				plots_[cont]->graph(j)->addData(key, data_[i+j]);
-				lastData_[i][j].push_back(data_[i+j]);
-				if(lastData_[i][j].size() > 400)
-					lastData_[i][j].pop_front();
 				dataMutex_.unlock();
 			}
 			cont++;
@@ -154,24 +164,10 @@ void PlotsQt::realTimePlot()
 
         lastPointKey = key;
     }
-	
+
 	int nplots = nPlots_/nLines_;
 	for(int i = 0; i < nplots; i++){
-		plots_[i]->graph(0)->rescaleAxes();
-		float max = std::numeric_limits<float>::min();
-		float min = std::numeric_limits<float>::max();
-		for(auto &line: lastData_[i]){
-			min = *std::min_element(line.second.begin(),line.second.end());
-			max = *std::max_element(line.second.begin(),line.second.end());
-		}
-		if(max > 0)
-			plots_[i]->yAxis->setRangeUpper(1.2 * max);
-		else
-			plots_[i]->yAxis->setRangeUpper(0.8 * max);
-		if(min > 0)
-			plots_[i]->yAxis->setRangeLower(0.8 * min);
-		else
-			plots_[i]->yAxis->setRangeLower(1.2 * min);
+		plots_[i]->graph(0)->rescaleAxes(false);
 
     	// make key axis range scroll with the data (at a constant range size of 8):
     	plots_[i]->xAxis->setRange(key, 8, Qt::AlignRight);

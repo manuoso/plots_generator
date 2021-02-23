@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     signal(SIGTERM, finishHandler);
 
 	int nplots = 3*2*2;
-	MultiPlotsQt<3,2,2> plotter;
+	MultiPlotsQt plotter("127.0.0.1", 8080);
 
 	int cont = 0;
 	while(!fin){
@@ -31,6 +31,9 @@ int main(int argc, char** argv) {
 
 		plotter.setPlotData(data);
 		cont++;
+
+		if(cont == 3000)
+			cont = 0;
 
 		// std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}

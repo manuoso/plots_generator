@@ -11,7 +11,8 @@
 #include <thread>
 #include <list>
 
-#include <QMainWindow>
+#include <QWidget>
+#include <QDialog>
 #include <QTime>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -23,7 +24,7 @@
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 
-class PlotsQt : public QMainWindow
+class PlotsQt : public QDialog
 {
     Q_OBJECT
     public:
@@ -31,16 +32,18 @@ class PlotsQt : public QMainWindow
 
         ~PlotsQt();
 
-        bool configure(int _rows, int _cols, int _nLines);
+        int configure(int _rows, int _cols, int _nLines, std::string _ip, int _port);
+    
+    protected:
+        void closeEvent(QCloseEvent *event) override;
 
-        private: 
-            bool getData();
+    private: 
+        bool getData();
 
-        private slots:
-            void realTimePlot();
+    private slots:
+        void realTimePlot();
         
     private:
-        QWidget *centralWidget_;
         QGridLayout *mainLayout_;
 
         std::vector<QColor> lineColors_;
@@ -55,10 +58,11 @@ class PlotsQt : public QMainWindow
         boost::asio::ip::tcp::acceptor *acc_;
         std::mutex dataMutex_;
         
+        std::string ip_ = "";
+        short unsigned int port_ = 0;
         int nPlots_ = 0;
         int nLines_ = 0;
         std::vector<float> data_;
-        std::map<int,std::map<int, std::list<float>>> lastData_;
 
         bool stopAll_ = false;
 
