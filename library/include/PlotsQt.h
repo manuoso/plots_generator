@@ -64,6 +64,8 @@ class PlotsQt : public QDialog
         int nLines_ = 0;
         std::vector<float> data_;
 
+        std::map<int, std::vector<float>> lastDataMax_, lastDataMin_;
+
         bool stopAll_ = false;
 
 };

@@ -147,18 +147,45 @@ void PlotsQt::realTimePlot()
 
     double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
     static double lastPointKey = 0;
-	
-	float maxValue = std::numeric_limits<float>::min();
-	float minValue = std::numeric_limits<float>::max();
 
     if (key-lastPointKey > 0.005) { // at most add point every 2 ms
 		int cont = 0;
 		for(int i = 0; i < nPlots_; i = i+nLines_){
+			// float maxValue = std::numeric_limits<float>::min();
+			// float minValue = std::numeric_limits<float>::max();
+
 			for(int j = 0; j < nLines_; j++){
 				dataMutex_.lock();
 				plots_[cont]->graph(j)->addData(key, data_[i+j]);
+
+				// if(maxValue < data_[i+j]){
+				// 	maxValue = data_[i+j];
+				// }
+
+				// if(minValue > data_[i+j]){
+				// 	minValue = data_[i+j];
+				// }
 				dataMutex_.unlock();
 			}
+
+			// lastDataMax_[cont].push_back(maxValue);
+			// if(lastDataMax_[cont].size() > 800){
+			// 	std::vector<float>::iterator it1 = lastDataMax_[cont].begin();
+			// 	std::vector<float>::iterator it2 = lastDataMax_[cont].begin();
+			// 	it2++;
+
+			// 	lastDataMax_[cont].erase(it1, it2);
+			// }
+
+			// lastDataMin_[cont].push_back(minValue);
+			// if(lastDataMin_[cont].size() > 800){
+			// 	std::vector<float>::iterator it1 = lastDataMin_[cont].begin();
+			// 	std::vector<float>::iterator it2 = lastDataMin_[cont].begin();
+			// 	it2++;
+			
+			// 	lastDataMin_[cont].erase(it1, it2);
+			// }
+
 			cont++;
 		}
 
@@ -168,6 +195,34 @@ void PlotsQt::realTimePlot()
 	int nplots = nPlots_/nLines_;
 	for(int i = 0; i < nplots; i++){
 		plots_[i]->graph(0)->rescaleAxes(false);
+
+		// float max = std::numeric_limits<float>::min();
+		// float min = std::numeric_limits<float>::max();
+		
+		// max = *std::max_element(lastDataMax_[i].begin(),lastDataMax_[i].end());
+		// min = *std::min_element(lastDataMin_[i].begin(),lastDataMin_[i].end());
+		
+		// for(int j = 0; j < lastDataMax_[i].size(); j++){
+		// 	if(max < lastDataMax_[i].at(j)){
+		// 		max = lastDataMax_[i].at(j);
+		// 	}
+		// 	if(min > lastDataMin_[i].at(j)){
+		// 		min = lastDataMin_[i].at(j);
+		// 	}
+		// }
+
+		// std::cout << "Max: " << max << " Min: " << min << " Size: " << lastDataMax_[i].size() << std::endl;
+
+		// if(max > 0)
+		// 	plots_[i]->yAxis->setRangeUpper(1.2 * max);
+		// else
+		// 	plots_[i]->yAxis->setRangeUpper(0.8 * max);
+
+		// if(min > 0)
+		// 	plots_[i]->yAxis->setRangeLower(0.8 * min);
+		// else
+		// 	plots_[i]->yAxis->setRangeLower(1.2 * min);
+
 
     	// make key axis range scroll with the data (at a constant range size of 8):
     	plots_[i]->xAxis->setRange(key, 8, Qt::AlignRight);
